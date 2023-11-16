@@ -20,8 +20,12 @@ int main()
     FILE* input = open_file(filename, "r");
     int counter = read_file(input, daily_readings);
 
-    while (1)
-    {
+    if (data_checker(daily_readings, counter) == 1) {
+        printf("File format is invalid.\n");
+        goto close_file;
+    }
+
+    while (1) {
 
         printf("\nA: View all your blood iron levels\n");                       // BRONZE
         printf("B: View your average blood iron level\n");                    // BRONZE
@@ -31,7 +35,7 @@ int main()
         printf("F: See some additional statistics about your iron levels\n"); // GOLD - see readme.md
         printf("G: Generate a graph of your iron levels\n");                  // GOLD/PLATINUM - see readme.md
         printf("Q: Exit the program\n\n");
-        printf("Enter option:\n");
+        printf("Enter option: ");
 
         // get the next character typed in and store in the 'choice'
         char choice = getchar();
@@ -40,15 +44,12 @@ int main()
         // as otherwise this will stay in the stdin and be read next time
         while (getchar() != '\n');
 
-
         // switch statement to control the menu.
-        switch (choice)
-        {
+        switch (choice) {
         // this allows for either capital or lower case
         case 'A':
         case 'a':
-            for (int i = 0; i < counter; i++)
-            {
+            for (int i = 0; i < counter; i++) {
                 print_reading(&daily_readings[i]);
             }
             break;
@@ -77,8 +78,15 @@ int main()
             break;
 
         case 'F':
-        case 'f':
-            return 0;
+        case 'f': ;
+            reading_statistics statistics;
+            create_reading_statistics(daily_readings, counter, &statistics);
+
+            printf(
+                "Mean: %.2f\nMedian: %.2f\nRange: %.2f\nStandard Deviation: %.2f\n",
+                statistics.mean, statistics.median, statistics.range, statistics.standard_deviation
+            );
+
             break;
 
         case 'G':
@@ -88,8 +96,7 @@ int main()
 
         case 'Q':
         case 'q':
-            return 0;
-            break;
+            goto close_file;
 
         // if they type anything else:
         default:
@@ -97,5 +104,7 @@ int main()
             break;
         }
     }
-    fclose(input);
+
+    close_file:
+        fclose(input);
 }

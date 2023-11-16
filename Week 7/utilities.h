@@ -18,6 +18,14 @@ typedef struct
     float bloodIron;
 } reading;
 
+typedef struct
+{
+    float range;
+    float standard_deviation;
+    float median;
+    float mean;
+} reading_statistics;
+
 /**
  * @brief Adapted version of the tokeniseRecord function which you should now be familiar with - this one is adapted for this data file
  *        as it has fewer outputs and gives you the bloodIron as a float
@@ -111,7 +119,16 @@ int read_file(FILE *inputFile, reading *dataArray)
  */
 int data_checker(reading *dataArray, int numReadings)
 {
-    // to do
+    for (int i = 0; i < numReadings; i++) {
+        reading current_reading = dataArray[i];
+        if (current_reading.bloodIron == 0) {
+            return 1;
+        }
+        if (current_reading.date == "") {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 
@@ -178,6 +195,32 @@ float find_lowest(reading* dataArray, int numReadings)
     return minimum;
 }
 
+int cmpfunc (const void *a, const void *b) {
+    reading a_f = *(reading*)a;
+    reading b_f = *(reading*)b;
+    return (a_f.bloodIron > b_f.bloodIron) - (a_f.bloodIron < b_f.bloodIron);
+}
+
+void create_reading_statistics(reading *dataArray, int numReadings, reading_statistics *out) {
+    float mean = find_mean(dataArray, numReadings);
+    (*out).mean = mean;
+
+    float highest = find_highest(dataArray, numReadings);
+    float lowest = find_lowest(dataArray, numReadings);
+    (*out).range = highest - lowest;
+
+    float mean_squares = 0.0;
+    for (int i = 0; i < numReadings; i++) {
+        mean_squares += pow(dataArray[i].bloodIron, 2);
+    }
+    mean_squares /= numReadings;
+    (*out).standard_deviation = mean_squares - pow(mean, 2);
+
+    reading sortedArray[BUFFER_SIZE];
+    memcpy(sortedArray, dataArray, BUFFER_SIZE*sizeof(reading));
+    qsort(sortedArray, numReadings, sizeof(reading), cmpfunc);
+    (*out).median = sortedArray[numReadings / 2].bloodIron;
+}
 
 /**
  * @brief Ask the user for the month to find, and then print out all readings containing that month.
